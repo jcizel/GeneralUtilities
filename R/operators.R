@@ -22,3 +22,14 @@
 ## a %||% x
 ## a <- "hello"
 ## a %||% x
+
+
+`%like2%` <- function (vector, pattern) 
+{
+    if (is.factor(vector)) {
+        as.integer(vector) %in% grep(toupper(pattern), toupper(levels(vector)))
+    }
+    else {
+        grepl(toupper(pattern), toupper(vector))
+    }
+}
