@@ -22,7 +22,7 @@ winsorize <- function(
 {
     if (is.numeric(x)){
         if (method == "IQR"){
-            qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+            qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm)
             H <- k * IQR(x, na.rm = na.rm)
             if (trim == FALSE){
                 x[x < (qnt[1] - H)] <- (qnt[1] - H)
