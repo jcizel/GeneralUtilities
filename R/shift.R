@@ -45,3 +45,44 @@ shift<-function(x,
     
     return(out)
 }
+
+
+shiftData <- function(
+    data,
+    var,
+    by = NULL,
+    lag = -1,
+    dif = FALSE,
+    relative = FALSE
+){
+    dt <- copy(data)
+    
+    for (x in var){
+        .n <- paste0(x,
+                     ".",
+                     ifelse(sign(lag)<0,'L','F'),
+                     abs(lag),
+                     ifelse(dif == TRUE, '.DIF',''),
+                     ifelse(relative == TRUE, '.REL',''))
+        if (!is.null(by)){            
+            dt[, (.n) := {
+                .x <- get(x)
+                shift(.x,
+                      lag = lag,
+                      dif = dif,
+                      relative = relative)
+            }
+             , by = by]
+        } else {
+            dt[, (.n) := {
+                .x <- get(x)
+                shift(.x,
+                      lag = lag,
+                      dif = dif,
+                      relative = relative)
+            }]            
+        }
+    }
+
+    return(dt)
+}
