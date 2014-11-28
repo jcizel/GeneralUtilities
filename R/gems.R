@@ -26,37 +26,68 @@ modify <- function(x,
 ##      , by = Species] %>>% data.frame
 
 
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title 
+##' @param data 
+##' @param by 
+##' @param keepvars 
+##' @param dropvars 
+##' @param convert specification of commands to be applied to predefined sets of
+##' variables. The syntax is as follows
+##' list('`var1,var2,var3,...`=`command1`;`command2`,...',...)
+##' 
+##' 
+##'
+##' @return 
+##' @author Janko Cizel
 procExpand <- function(
     data = mtcars %>>% data.table,
     by = 'gear',
     keepvars = NULL,
     dropvars = NULL,
     convert =
-        list('_NUMERIC_' = '`+`(1)',
-             '_CHAR_' = 'nchar')
+        list('_NUMERIC_ ~ `+`(1);`-`(2)',
+             '_CHAR_ ~ nchar')    
 ){
     if (!inherits(data,'data.table')) stop('`data` must be a data.table!')
     if (by == '' || (keepvars %||% 'ok' == '')) stop("`by` and `keepvars` cannot be empty strings!")
     if (!is.null(keepvars) && !is.null(dropvars)) stop('`keepvars` and `dropvars` cannot both be specified simultaneously!')
 
-    if (is.null(by))
-        names(convert) <- .varList(data, names(convert), drop = dropvars)
-    else
-        names(convert) <- .varList(data,
-                                   names(convert),
-                                   drop = if (is.null(dropvars)) by else c(dropvars,by)
-                                   )
     .convert <- .parseConvert(convert)
-    vars <- unique(unlist(lapply(.convert,function(x) x$vars)))
-    vars <- vars[vars!=""]
+
+    if (is.null(by)){
+        .convert %>>%
+        list.update(vars = .varList(data,vars,drop = dropvars)) %>>%
+        list.update(vars,vars = trim(stringr::str_split(vars,",")[[1]])) %>>%
+        list.update(oper,oper = trim(stringr::str_split(oper,";")[[1]])) %>>%        
+        (~ .c)
+    }
+    else{
+        .convert %>>% list.update(vars =
+                                      .varList(data,
+                                               vars,
+                                               drop = if (is.null(dropvars)) by else c(dropvars,by))) %>>%
+        list.update(vars = .varList(data,vars,drop = dropvars)) %>>%
+        list.update(vars,vars = stringr::str_split(vars,",")[[1]]) %>>%
+        list.update(oper,oper = trim(stringr::str_split(oper,";")[[1]])) %>>%                
+        (~ .c)
+    }
+
+    .c %>>%
+    list.map(. %>>%  list.extract("vars")) %>>%
+    unlist %>>%
+    unique %>>%
+    (x ~ x[x!=""]) %>>%
+    (~ vars)    
     
     if (is.null(by)){
         keep <- c(keepvars,vars) %||% vars
         keep <- keep[keep != ""]
         dt <- copy(data[,.SD,.SDcols = c(keep)])
         for (x in vars){
-            o <- rlist::list.find(.convert, x %in% vars)[[1]][['oper']]
-            if (length(o)>1) stop('Only one stream of modifications can be applied to a single variable.')
+            o <- rlist::list.find(.c, x %in% vars)[[1]][['oper']]
             dt[,(x) := modify(x = get(x), operations = o)]
             setcolorder(dt, orderElements(names(dt),c(keepvars) %||% names(dt),'first'))
         }
@@ -65,31 +96,30 @@ procExpand <- function(
         keep <- keep[keep != ""]
         dt <- copy(data[,.SD,.SDcols = c(keep)])
         for (x in vars){
-            o <- rlist::list.find(.convert, x %in% vars)[[1]][['oper']]
-            ## if (length(o)>1) stop('Only one stream of modifications can be applied to a single variable.')
+            o <- rlist::list.find(.c, x %in% vars)[[1]][['oper']]
             dt[,(x) := modify(x = get(x), operations = o)
                , by = by]
             setcolorder(dt, orderElements(names(dt),c(by,keepvars) %||% c(by),'first'))
         }        
     }
-
     return(dt)
 }
 
 ## mtcars %>>% data.table %>>% (~ dt)
 ## by = 'gear'
 
-## keepvars = c('hp','vs')
-## convert <-
-##     list('drat,wt'=c('shift(lag=-1,dif = TRUE,relative = TRUE)','`-`(1)'),
-##          'qsec'=c('`+`(5)','`/`(10)'))
+## ## keepvars = c('hp','vs')
+## ## convert <-
+## ##     list('drat,wt'=c('shift(lag=-1,dif = TRUE,relative = TRUE)','`-`(1)'),
+## ##          'qsec'=c('`+`(5)','`/`(10)'))
 
 
 ## keepvars = NULL
 ## convert =
-##     list('_NUMERIC_' = 'shift(lag = -3, dif = TRUE)',
-##          '_CHAR_' = 'nchar')
+##     list('_NUMERIC_ ~ shift(lag = -1, dif = TRUE)',
+##          '_CHAR_ ~ nchar')
 ## ## undebug(procExpand)
+## ## undebug(modify)
 ## procExpand(
 ##     data = dt,
 ##     by = by,
@@ -99,18 +129,27 @@ procExpand <- function(
 ## )
 
 .parseConvert <- function(convert =
-                              list('var1,var2' = '`+`1',
-                                   'var3,var4' = '`-`1')){
+                              list('var1,var2 ~ `+`1',
+                                   'var3,var4 ~ `-`1')){
+    p <- lapply(convert,function(x){trim(stringr::str_split(x,'~')[[1]])})
+
+    convert %>>%
+    list.map(. ~ trim(stringr::str_split(.,'~')[[1]])) %>>%
+    (~ convert)
+    
     o <- 
         foreach (x = 1:length(convert)) %do% {
-            vars = stringr::str_split(string = names(convert)[[x]],',')[[1]]
-            oper = convert[[x]]
+            vars = stringr::str_split(string = p[[x]][[1]],',')[[1]]
+            oper = p[[x]][[2]]
             list(vars = vars,
                  oper = oper)
         }
     return(o)
 }
-    
+
+## .parseConvert(convert)
+
+
 .varList <- function(
     data,
     varsel = "_NUMERIC_",
