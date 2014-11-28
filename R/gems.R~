@@ -3,7 +3,7 @@ modify <- function(x,
                        c('shift(lag = -1, dif = TRUE)',
                          '(function(a,b) a^{1/b})(2)',
                          '+1')){
-    if (!is.numeric(x)) stop('`x` must be a numeric vector!')
+    if (!is.vector(x)) stop('`x` must be a vector!')
     
     q <- parse(text = paste(c("x",operations), collapse = "%>>%"))
     return(eval(q))
@@ -31,15 +31,23 @@ procExpand <- function(
     by = 'gear',
     keepvars = 'mpg',
     convert =
-        list('cyl,disp' = '`+`(1)',
-             'hp,drat' = '`-`(1)')
+        list('_NUMERIC_' = '`+`(1)',
+             '_CHAR_' = 'nchar')
 ){
-    if (!inherits(data,'data.table')) stop('`data` must be a data.table!')    
+    if (!inherits(data,'data.table')) stop('`data` must be a data.table!')
+
+    if (is.null(by))
+        names(convert) <- .varList(data, names(convert))
+    else
+        names(convert) <- .varList(data, names(convert),drop = by)
+    
     .convert <- .parseConvert(convert)
-    vars <- unique(unlist(lapply(.convert,function(x) x$vars)))       
+    vars <- unique(unlist(lapply(.convert,function(x) x$vars)))
+    vars <- vars[vars!=""]
     
     if (is.null(by)){
         keep <- c(keepvars,vars) %||% vars
+        keep <- keep[keep != ""]
         dt <- copy(data[,.SD,.SDcols = c(keep)])
         for (x in vars){
             o <- rlist::list.find(.convert, x %in% vars)[[1]][['oper']]
@@ -48,10 +56,11 @@ procExpand <- function(
         }
     } else {
         keep <- c(keepvars,vars,by) %||% c(vars,by)
+        keep <- keep[keep != ""]
         dt <- copy(data[,.SD,.SDcols = c(keep)])
         for (x in vars){
             o <- rlist::list.find(.convert, x %in% vars)[[1]][['oper']]
-            if (length(o)>1) stop('Only one stream of modifications can be applied to a single variable.')
+            ## if (length(o)>1) stop('Only one stream of modifications can be applied to a single variable.')
             dt[,(x) := modify(x = get(x), operations = o)
                , by = by]
         }        
@@ -63,9 +72,15 @@ procExpand <- function(
 ## by = 'gear'
 ## keepvars = c('hp','vs')
 ## convert <-
-##     list('drat,wt'='shift(lag=-2,dif = TRUE)',
-##          'qsec'='`+`(5)')
+##     list('drat,wt'=c('shift(lag=-1,dif = TRUE,relative = TRUE)','`-`(1)'),
+##          'qsec'=c('`+`(5)','`/`(10)'))
 
+
+## keepvars = NULL
+## convert =
+##     list('_NUMERIC_' = 'shift(lag = -3, dif = TRUE)',
+##          '_CHAR_' = 'nchar')
+## ## undebug(procExpand)
 ## procExpand(
 ##     data = dt,
 ##     by = by,
@@ -86,3 +101,35 @@ procExpand <- function(
     return(o)
 }
     
+.varList <- function(
+    data,
+    varsel = "_NUMERIC_",
+    drop  = NULL
+)
+{
+    .specials <- function(data = data,
+                          varsel = varsel,
+                          drop = drop){
+        o <- 
+            switch(varsel,
+                   '_NUMERIC_' = names(Filter(is.numeric, data)),
+                   '_CHAR_' = names(Filter(is.character, data)),
+                   varsel)
+
+        if (!is.null(drop)) o <- setdiff(o,drop)
+
+        out <- paste0(o, collapse = ',')
+        return(out)
+    }
+
+    .fun <- Vectorize(.specials,vectorize.args = 'varsel')
+    
+    return(.fun(data = data,
+                varsel = varsel,
+                drop = drop) )
+}
+
+## mtcars %>>%
+## (? dt ~ .varList(dt, varsel = '_NUMERIC_')) %>>%
+## (? dt ~ .varList(dt, varsel = '_CHAR_')) %>>%
+## (? dt ~ .varList(dt, varsel = c('x,y', '_NUMERIC_')))
