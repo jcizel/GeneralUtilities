@@ -20,6 +20,7 @@ winsorize <- function(
     na.rm = TRUE,
     trim = FALSE)
 {
+    t <- typeof(x)
     if (is.numeric(x)){
         if (method == "IQR"){
             qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm)
@@ -31,7 +32,9 @@ winsorize <- function(
                 x[x < (qnt[1] - H)] <- NA
                 x[x > (qnt[2] + H)] <- NA
             }
-            return(as.numeric(x))
+            return(switch(t,
+                          'integer' = as.integer(x),
+                          'double' = as.numeric(x)))
         } else if (method == "PERC"){
             lim <- quantile(x, probs=c(fraction, 1-fraction), na.rm = na.rm)
             if (trim == FALSE){
@@ -41,7 +44,9 @@ winsorize <- function(
                 x[ x < lim[1] ] <- lim[1]
                 x[ x > lim[2] ] <- lim[2]
             }
-            return(as.numeric(x))
+            return(switch(t,
+                          'integer' = as.integer(x),
+                          'double' = as.numeric(x)))
         } else {
             stop("Specify a winsorization method!")
         }
