@@ -43,7 +43,7 @@ shift<-function(x,
 
     out[is.infinite(out)] <- NA
     
-    return(out)
+    return(as.numeric(out))
 }
 
 ##' shiftData implements lead/lag/dif operations on a data.table and returns a
