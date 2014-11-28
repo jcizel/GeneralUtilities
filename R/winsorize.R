@@ -31,7 +31,7 @@ winsorize <- function(
                 x[x < (qnt[1] - H)] <- NA
                 x[x > (qnt[2] + H)] <- NA
             }
-            return(x)
+            return(as.numeric(x))
         } else if (method == "PERC"){
             lim <- quantile(x, probs=c(fraction, 1-fraction), na.rm = na.rm)
             if (trim == FALSE){
@@ -41,7 +41,7 @@ winsorize <- function(
                 x[ x < lim[1] ] <- lim[1]
                 x[ x > lim[2] ] <- lim[2]
             }
-            return(x)
+            return(as.numeric(x))
         } else {
             stop("Specify a winsorization method!")
         }
