@@ -30,18 +30,22 @@ procExpand <- function(
     data = mtcars %>>% data.table,
     by = 'gear',
     keepvars = NULL,
+    dropvars = NULL,
     convert =
         list('_NUMERIC_' = '`+`(1)',
              '_CHAR_' = 'nchar')
 ){
     if (!inherits(data,'data.table')) stop('`data` must be a data.table!')
-    if (by == '' || keepvars == '') stop("`by` and `keepvars` cannot be empty strings!")
+    if (by == '' || (keepvars %||% 'ok' == '')) stop("`by` and `keepvars` cannot be empty strings!")
+    if (!is.null(keepvars) && !is.null(dropvars)) stop('`keepvars` and `dropvars` cannot both be specified simultaneously!')
 
     if (is.null(by))
-        names(convert) <- .varList(data, names(convert))
+        names(convert) <- .varList(data, names(convert), drop = dropvars)
     else
-        names(convert) <- .varList(data, names(convert),drop = by)
-    
+        names(convert) <- .varList(data,
+                                   names(convert),
+                                   drop = if (is.null(dropvars)) by else c(dropvars,by)
+                                   )
     .convert <- .parseConvert(convert)
     vars <- unique(unlist(lapply(.convert,function(x) x$vars)))
     vars <- vars[vars!=""]
@@ -74,6 +78,7 @@ procExpand <- function(
 
 ## mtcars %>>% data.table %>>% (~ dt)
 ## by = 'gear'
+
 ## keepvars = c('hp','vs')
 ## convert <-
 ##     list('drat,wt'=c('shift(lag=-1,dif = TRUE,relative = TRUE)','`-`(1)'),
@@ -89,6 +94,7 @@ procExpand <- function(
 ##     data = dt,
 ##     by = by,
 ##     keepvars = keepvars,
+##     dropvars = 'hp',
 ##     convert = convert
 ## )
 
@@ -108,7 +114,7 @@ procExpand <- function(
 .varList <- function(
     data,
     varsel = "_NUMERIC_",
-    drop  = NULL
+    drop
 )
 {
     .specials <- function(data = data,

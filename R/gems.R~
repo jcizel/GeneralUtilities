@@ -29,12 +29,13 @@ modify <- function(x,
 procExpand <- function(
     data = mtcars %>>% data.table,
     by = 'gear',
-    keepvars = 'mpg',
+    keepvars = NULL,
     convert =
         list('_NUMERIC_' = '`+`(1)',
              '_CHAR_' = 'nchar')
 ){
     if (!inherits(data,'data.table')) stop('`data` must be a data.table!')
+    if (by == '' || keepvars == '') stop("`by` and `keepvars` cannot be empty strings!")
 
     if (is.null(by))
         names(convert) <- .varList(data, names(convert))
@@ -53,6 +54,7 @@ procExpand <- function(
             o <- rlist::list.find(.convert, x %in% vars)[[1]][['oper']]
             if (length(o)>1) stop('Only one stream of modifications can be applied to a single variable.')
             dt[,(x) := modify(x = get(x), operations = o)]
+            setcolorder(dt, orderElements(names(dt),c(keepvars) %||% names(dt),'first'))
         }
     } else {
         keep <- c(keepvars,vars,by) %||% c(vars,by)
@@ -63,8 +65,10 @@ procExpand <- function(
             ## if (length(o)>1) stop('Only one stream of modifications can be applied to a single variable.')
             dt[,(x) := modify(x = get(x), operations = o)
                , by = by]
+            setcolorder(dt, orderElements(names(dt),c(by,keepvars) %||% c(by),'first'))
         }        
     }
+
     return(dt)
 }
 
