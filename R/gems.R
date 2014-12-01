@@ -5,8 +5,9 @@ modify <- function(x,
                          '+1')){
     if (!is.vector(x)) stop('`x` must be a vector!')
     
-    q <- parse(text = paste(c("x",operations), collapse = "%>>%"))
-    return(eval(q))
+    ## q <- parse(text = paste(c("x",operations), collapse = "%>>%"))
+    q <- parse(text = paste(c(substitute(x),operations), collapse = "%>>%"))
+    return(eval(q, envir = parent.frame()))
 }
 
 
@@ -114,9 +115,13 @@ procExpand <- function(
 ## ##          'qsec'=c('`+`(5)','`/`(10)'))
 
 
-## keepvars = NULL
+## by = 'gear'
+## keepvars = 'cyl'
 ## convert =
 ##     list('_NUMERIC_ ~ shift(lag = -1, dif = TRUE)',
+##          '_CHAR_ ~ nchar')
+## convert =
+##     list('__rat ~ `/`(cyl)',
 ##          '_CHAR_ ~ nchar')
 ## ## undebug(procExpand)
 ## ## undebug(modify)
@@ -124,7 +129,7 @@ procExpand <- function(
 ##     data = dt,
 ##     by = by,
 ##     keepvars = keepvars,
-##     dropvars = 'hp',
+##     dropvars = NULL,
 ##     convert = convert
 ## )
 
