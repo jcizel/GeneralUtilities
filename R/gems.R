@@ -36,7 +36,7 @@ modify <- function(x,
 ##' @param dropvars 
 ##' @param convert specification of commands to be applied to predefined sets of
 ##' variables. The syntax is as follows
-##' list('`var1,var2,var3,...`=`command1`;`command2`,...',...)
+##' list('`var1,var2,var3,...`~`command1`;`command2`,...',...)
 ##' 
 ##' 
 ##'
@@ -153,17 +153,25 @@ procExpand <- function(
 .varList <- function(
     data,
     varsel = "_NUMERIC_",
-    drop
+    drop = NULL
 )
 {
     .specials <- function(data = data,
                           varsel = varsel,
                           drop = drop){
-        o <- 
-            switch(varsel,
-                   '_NUMERIC_' = names(Filter(is.numeric, data)),
-                   '_CHAR_' = names(Filter(is.character, data)),
-                   varsel)
+        o <- {
+            if (varsel == '_NUMERIC_')
+                names(Filter(is.numeric, data))
+            else if (varsel == '_CHAR_')
+                names(Filter(is.character, data))
+            else if (varsel %like% "^__"){
+                pattern = gsub("(__)(.+)","\\2",varsel)
+                o <- names(data)[names(data) %like% pattern]
+                o
+            } else {
+                varsel
+            }
+        }
 
         if (!is.null(drop)) o <- setdiff(o,drop)
 
@@ -181,4 +189,5 @@ procExpand <- function(
 ## mtcars %>>%
 ## (? dt ~ .varList(dt, varsel = '_NUMERIC_')) %>>%
 ## (? dt ~ .varList(dt, varsel = '_CHAR_')) %>>%
+## (? dt ~ .varList(dt, varsel = '__rat')) %>>%
 ## (? dt ~ .varList(dt, varsel = c('x,y', '_NUMERIC_')))
