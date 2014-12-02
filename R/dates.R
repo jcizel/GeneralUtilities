@@ -19,7 +19,7 @@ convertToDate <- function(x){
         } else if (.x %like% "^[0-9]{4}-[0-9]+-[0-9]+$") {
             date <- .x
         } else {
-            stop('Check date specification!')
+            warning('Check date specification!')
             date <- NA
         }
 
