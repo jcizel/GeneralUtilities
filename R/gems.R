@@ -50,7 +50,9 @@ procExpand <- function(
     dropvars = NULL,
     convert =
         list('_NUMERIC_ ~ `+`(1);`-`(2)',
-             '_CHAR_ ~ nchar')    
+             '_CHAR_ ~ nchar'),
+    prefix = '',
+    suffix = ''
 ){
     if (!inherits(data,'data.table')) stop('`data` must be a data.table!')
     if (by == '' || (keepvars %||% 'ok' == '')) stop("`by` and `keepvars` cannot be empty strings!")
@@ -89,7 +91,8 @@ procExpand <- function(
         dt <- copy(data[,.SD,.SDcols = c(keep)])
         for (x in vars){
             o <- rlist::list.find(.c, x %in% vars)[[1]][['oper']]
-            dt[,(x) := modify(x = get(x), operations = o)]
+            ## dt[,(x) := modify(x = get(x), operations = o)]
+            dt[,paste0(prefix,x,suffix) := modify(x = get(x), operations = o)]            
             setcolorder(dt, orderElements(names(dt),c(keepvars) %||% names(dt),'first'))
         }
     } else {
@@ -98,8 +101,10 @@ procExpand <- function(
         dt <- copy(data[,.SD,.SDcols = c(keep)])
         for (x in vars){
             o <- rlist::list.find(.c, x %in% vars)[[1]][['oper']]
-            dt[,(x) := modify(x = get(x), operations = o)
-               , by = by]
+            ## dt[,(x) := modify(x = get(x), operations = o)
+            ##    , by = by]
+            dt[,paste0(prefix,x,suffix) := modify(x = get(x), operations = o)
+               , by = by]            
             setcolorder(dt, orderElements(names(dt),c(by,keepvars) %||% c(by),'first'))
         }        
     }
@@ -130,7 +135,9 @@ procExpand <- function(
 ##     by = by,
 ##     keepvars = keepvars,
 ##     dropvars = NULL,
-##     convert = convert
+##     convert = convert,
+##     prefix = '',
+##     suffix = '_mod'
 ## )
 
 .parseConvert <- function(convert =
