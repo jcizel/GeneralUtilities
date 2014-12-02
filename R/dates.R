@@ -16,11 +16,16 @@ convertToDate <- function(x){
             date <- as.character(as.Date(paste0(year,'-',qrt*3,'-',1)) + months(1) - days(1))
         } else if (.x %like% "^[0-9]{4}$") {
             date <- paste0(.x, "-12-31")
+        } else if (.x %like% "^[0-9]{4}-[0-9]+-[0-9]+$") {
+            date <- .x
+        } else {
+            stop('Check date specification!')
+            date <- NA
         }
 
         return(date)
     }
 
-    levelsm <- Vectorize(.converter)(levels) %>>% as.Date
+    levelsm <- Vectorize(.converter)(levels) 
     return(levelsm[x])
 }
