@@ -45,7 +45,7 @@ modify <- function(x,
 ##' @author Janko Cizel
 procExpand <- function(
     data = mtcars %>>% data.table,
-    by = 'gear',
+    by = NULL,
     keepvars = NULL,
     dropvars = NULL,
     convert =
@@ -55,7 +55,7 @@ procExpand <- function(
     suffix = ''
 ){
     if (!inherits(data,'data.table')) stop('`data` must be a data.table!')
-    if (by == '' || (keepvars %||% 'ok' == '')) stop("`by` and `keepvars` cannot be empty strings!")
+    ## if (by == '' || (keepvars %||% 'ok' == '')) stop("`by` and `keepvars` cannot be empty strings!")
     if (!is.null(keepvars) && !is.null(dropvars)) stop('`keepvars` and `dropvars` cannot both be specified simultaneously!')
 
     .convert <- .parseConvert(convert)
