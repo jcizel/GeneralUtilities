@@ -151,7 +151,8 @@ procExpand <- function(
     
     o <- 
         foreach (x = 1:length(convert)) %do% {
-            vars = stringr::str_split(string = p[[x]][[1]],',')[[1]]
+            ## vars = stringr::str_split(string = p[[x]][[1]],',')[[1]]
+            vars = p[[x]][[1]]            
             oper = p[[x]][[2]]
             list(vars = vars,
                  oper = oper)
