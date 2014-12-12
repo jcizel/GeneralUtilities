@@ -67,9 +67,16 @@
     return(out)    
 }
 
-
-procSummarize <- function(data,
-                          drop = 'IDNR'){
+##' Summarize a dataset 
+##'
+##' .. content for \details{} ..
+##' @title Summarize a dataset 
+##' @param data a data.table
+##' @param drop names of variables, which should be excluded from the analysis
+##' @return data.table with summary results
+##' @author Janko Cizel
+procUnivariate <- function(data,
+                           drop = 'IDNR'){
     if (!inherits(data,"data.table")) stop('Input data must be of `data.table` class!')
 
     varsel <- setdiff(names(data),
