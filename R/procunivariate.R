@@ -100,7 +100,8 @@ procUnivariate <- function(data,
     rbindlist(fill = TRUE) %>>%
     (~ result)
 
-    setcolorder(result, c(setdiff(names(result),"TOP5"),"TOP5"))
+    if ("TOP5" %in% names(result))
+        setcolorder(result, c(setdiff(names(result),"TOP5"),"TOP5"))
 
     cat(sprintf("NAME=%.4s   NOBS=%13.0f  MIN=%13.0f MED=%13.0f MAX=%13.0f\n",
                 result$NAME,
