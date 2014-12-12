@@ -105,5 +105,5 @@ procSummarize <- function(data,
     return(result)
 }
 
-r <- 
-    procSummarize(data = dt)
+## r <- 
+##     procSummarize(data = dt)
