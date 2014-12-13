@@ -54,8 +54,10 @@
     .c <- .countObs(x)
 
     .s <-
-        list(MEAN = mean(x, na.rm = TRUE),
-             SD   = sd(x, na.rm = TRUE))
+        list(
+            SUM  = sum(x, na.rm = TRUE),
+            MEAN = mean(x, na.rm = TRUE),
+            SD   = sd(x, na.rm = TRUE))
     
     .q <- quantile(x,
                    probs = seq(0,1,0.1),
@@ -76,40 +78,63 @@
 ##' @return data.table with summary results
 ##' @author Janko Cizel
 procUnivariate <- function(data,
-                           drop = 'IDNR'){
+                           drop = 'IDNR',
+                           by = NULL){
     if (!inherits(data,"data.table")) stop('Input data must be of `data.table` class!')
 
     varsel <- setdiff(names(data),
                       drop)
 
-    out <- list()
-    for (x in varsel){
-        cat(sprintf('Processing: %s.\n',x))
+    if (is.null(by)){
+        out <- list()
+        for (x in varsel){
+            cat(sprintf('Processing: %s.\n',x))
 
-        if (is.character(data[[x]]) | is.factor(data[[x]])){
-            o <- .summarizeCharacter(data[[x]])
-        } else {
-            o <- .summarizeNumeric(data[[x]])
+            if (is.character(data[[x]]) | is.factor(data[[x]])){
+                o <- .summarizeCharacter(data[[x]])
+            } else {
+                o <- .summarizeNumeric(data[[x]])
+            }
+            out[[x]] <- o
         }
-        out[[x]] <- o
+        out %>>%
+        list.map(c(NAME = .name, .) %>>% as.data.table) %>>%
+        rbindlist(fill = TRUE) %>>%
+        (~ result)
+    } else {
+        out <- list()
+        for (x in varsel){
+            cat(sprintf('Processing: %s.\n',x))
+
+            if (is.character(data[[x]]) | is.factor(data[[x]])){
+                o <- data[,.summarizeCharacter(get(x)), by = by ]
+            } else {
+                o <- data[,.summarizeNumeric(get(x)), by = by]
+            }
+            out[[x]] <- o
+        }
+        
+        result <- 
+        out %>>%
+        list.map(.[, NAME := .name]) %>>%
+        rbindlist(fill = TRUE) %>>%
+        copy
+
+
     }
-
-
-    out %>>%
-    list.map(c(NAME = .name, .) %>>% as.data.table) %>>%
-    rbindlist(fill = TRUE) %>>%
-    (~ result)
 
     if ("TOP5" %in% names(result))
         setcolorder(result, c(setdiff(names(result),"TOP5"),"TOP5"))
 
-    cat(sprintf("NAME=%.4s   NOBS=%13.0f  MIN=%13.0f MED=%13.0f MAX=%13.0f\n",
-                result$NAME,
-                result$NOBS,
-                result$`0%`,
-                result$`50%`,                
-                result$`100%`))
-
+    if (is.null(by)){
+        cat(sprintf("NAME=%.4s   NOBS=%13.0f  MIN=%13.0f MED=%13.0f MAX=%13.0f\n",
+                    result$NAME,
+                    result$NOBS,
+                    result$`0%`,
+                    result$`50%`,                
+                    result$`100%`))
+    }
+    
     return(result)
 }
 
