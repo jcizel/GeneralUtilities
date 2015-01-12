@@ -46,22 +46,36 @@
     return(out)
 }
 
-.summarizeNumeric <- function(x){
+.summarizeNumeric <- function(x, weight){
     if (!is.numeric(x)) stop('x must be a numeric vector!')
 
     x <- .preprocessNumeric(x)
 
     .c <- .countObs(x)
 
-    .s <-
-        list(
-            SUM  = sum(x, na.rm = TRUE),
-            MEAN = mean(x, na.rm = TRUE),
-            SD   = sd(x, na.rm = TRUE))
-    
-    .q <- quantile(x,
-                   probs = seq(0,1,0.1),
-                   na.rm = TRUE) %>>% as.list
+    if (is.null(weight)){
+        .s <-
+            list(
+                SUM  = sum(x, na.rm = TRUE),
+                MEAN = mean(x, na.rm = TRUE),
+                SD   = sd(x, na.rm = TRUE))
+        
+        .q <- quantile(x,
+                       probs = seq(0,1,0.1),
+                       na.rm = TRUE) %>>% as.list
+    } else {
+        .s <-
+            list(
+                SUM  = sum(x, na.rm = TRUE),
+                MEAN = Hmisc::wtd.mean(x, weights = weight, na.rm = TRUE),
+                SD   = Hmisc::wtd.var(x, weights = weight, na.rm = TRUE)) %>>% sqrt
+        
+        .q <- Hmisc::wtd.quantile(x,
+                                  weights = weight,
+                                  probs = seq(0,1,0.1),
+                                  na.rm = TRUE) %>>% as.list
+    }
+
 
     out <- 
         c(.c,.s,.q) 
@@ -79,7 +93,9 @@
 ##' @author Janko Cizel
 procUnivariate <- function(data,
                            drop = 'IDNR',
-                           by = NULL){
+                           by = NULL,
+                           weight = NULL,
+                           print = FALSE){
     if (!inherits(data,"data.table")) stop('Input data must be of `data.table` class!')
 
     varsel <- setdiff(names(data),
@@ -93,7 +109,8 @@ procUnivariate <- function(data,
             if (is.character(data[[x]]) | is.factor(data[[x]])){
                 o <- .summarizeCharacter(data[[x]])
             } else {
-                o <- .summarizeNumeric(data[[x]])
+                o <- .summarizeNumeric(data[[x]],
+                                       weight = weight)
             }
             out[[x]] <- o
         }
@@ -109,7 +126,8 @@ procUnivariate <- function(data,
             if (is.character(data[[x]]) | is.factor(data[[x]])){
                 o <- data[,.summarizeCharacter(get(x)), by = by ]
             } else {
-                o <- data[,.summarizeNumeric(get(x)), by = by]
+                o <- data[,.summarizeNumeric(get(x),
+                                             weight = get(weight)), by = by]
             }
             out[[x]] <- o
         }
@@ -126,7 +144,7 @@ procUnivariate <- function(data,
     if ("TOP5" %in% names(result))
         setcolorder(result, c(setdiff(names(result),"TOP5"),"TOP5"))
 
-    if (is.null(by)){
+    if (is.null(by) & print == TRUE){
         cat(sprintf("NAME=%.4s   NOBS=%13.0f  MIN=%13.0f MED=%13.0f MAX=%13.0f\n",
                     result$NAME,
                     result$NOBS,
