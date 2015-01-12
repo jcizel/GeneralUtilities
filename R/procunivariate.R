@@ -109,8 +109,11 @@ procUnivariate <- function(data,
             if (is.character(data[[x]]) | is.factor(data[[x]])){
                 o <- .summarizeCharacter(data[[x]])
             } else {
-                o <- .summarizeNumeric(data[[x]],
-                                       weight = weight)
+                if (is.null(weight))
+                    o <- .summarizeNumeric(data[[x]])
+                else
+                    o <- .summarizeNumeric(data[[x]],weight = data[[weight]])                    
+                                           
             }
             out[[x]] <- o
         }
