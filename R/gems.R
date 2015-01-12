@@ -50,9 +50,7 @@ procExpand <- function(
     dropvars = NULL,
     convert =
         list('~ _NUMERIC_ ~ `+`(1);`-`(2)',
-             '~ _CHAR_ ~ nchar'),
-    prefix = '',
-    suffix = ''
+             '~ _CHAR_ ~ nchar')
 ){
     if (!inherits(data,'data.table'))
         stop('`data` must be a data.table!')
