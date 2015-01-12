@@ -68,7 +68,7 @@
             list(
                 SUM  = sum(x, na.rm = TRUE),
                 MEAN = Hmisc::wtd.mean(x, weights = weight, na.rm = TRUE),
-                SD   = Hmisc::wtd.var(x, weights = weight, na.rm = TRUE)) %>>% sqrt
+                SD   = sqrt(Hmisc::wtd.var(x, weights = weight, na.rm = TRUE)))
         
         .q <- Hmisc::wtd.quantile(x,
                                   weights = weight,
