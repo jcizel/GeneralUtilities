@@ -46,7 +46,7 @@
     return(out)
 }
 
-.summarizeNumeric <- function(x, weight){
+.summarizeNumeric <- function(x, weight=NULL){
     if (!is.numeric(x)) stop('x must be a numeric vector!')
 
     x <- .preprocessNumeric(x)
@@ -126,8 +126,10 @@ procUnivariate <- function(data,
             if (is.character(data[[x]]) | is.factor(data[[x]])){
                 o <- data[,.summarizeCharacter(get(x)), by = by ]
             } else {
-                o <- data[,.summarizeNumeric(get(x),
-                                             weight = get(weight)), by = by]
+                if (is.null(weight))
+                    o <- data[,.summarizeNumeric(get(x)), by = by]
+                else
+                    o <- data[,.summarizeNumeric(get(x),weight=get(weight)), by = by]
             }
             out[[x]] <- o
         }
