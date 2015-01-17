@@ -11,6 +11,8 @@ Depends:
     rlist,
     foreach,
     Hmisc
+Imports:
+	data.table	
 LazyData: true
 VignetteBuilder: knitr
 License: What license is it under

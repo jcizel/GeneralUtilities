@@ -79,6 +79,7 @@ procExpand <- function(
 
     out <- 
         foreach(l = 1:length(.c)) %do% {
+            browser()
             .l <- .c[[l]]
 
             if (.l$vars == "")
