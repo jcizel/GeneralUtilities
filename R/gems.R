@@ -144,20 +144,20 @@ procExpand <- function(
     return(result)
 }
 
-mtcars %>>% data.table %>>% (~ dt)
-by = 'gear'
+## mtcars %>>% data.table %>>% (~ dt)
+## by = 'gear'
 
-keepvars = c('hp','vs')
-convert <-
-    list('pre:dif.~ drat,wt ~ shift(lag=-1,dif = TRUE,relative = FALSE)',
-         'pre:dif.,suf:.rel ~ drat,wt ~ shift(lag=-1,dif = TRUE,relative = TRUE);`*`(100)')
+## keepvars = c('hp','vs')
+## convert <-
+##     list('pre:dif.~ drat,wt ~ shift(lag=-1,dif = TRUE,relative = FALSE)',
+##          'pre:dif.,suf:.rel ~ drat,wt ~ shift(lag=-1,dif = TRUE,relative = TRUE);`*`(100)')
 
-procExpand(
-    data = dt,
-    by = 'gear',
-    keepvars = c('mpg','drat','wt'),
-    convert = convert    
-)
+## procExpand(
+##     data = dt,
+##     by = 'gear',
+##     keepvars = c('mpg','drat','wt'),
+##     convert = convert    
+## )
 
 .parseLabels <- function(labs = c("pre:test", "suf:test2")){
    .p <- grep("pre:",labs,value = TRUE)
