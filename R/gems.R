@@ -91,7 +91,7 @@ procExpand <- function(
                 for (x in .l$vars){
                     dt[,paste0(x) :=
                            modify(x = as.numeric(get(x)),
-                                  operations = .l$oper)]
+                                  operations = .l$oper) %>>% as.numeric]
                     setnames(dt,
                              x,
                              paste0(.l$labs$prefix,
@@ -106,7 +106,7 @@ procExpand <- function(
                 for (x in .l$vars){
                     dt[,paste0(x) :=
                            modify(x = as.numeric(get(x)),
-                                  operations = .l$oper),
+                                  operations = .l$oper) %>>% as.numeric,
                        by = by]
                     
                     setnames(dt,
