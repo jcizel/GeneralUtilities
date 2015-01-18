@@ -90,7 +90,7 @@ procExpand <- function(
                 dt <- copy(data[,.SD,.SDcols = c(keep)])
                 for (x in .l$vars){
                     dt[,paste0(x) :=
-                           modify(x = get(x),
+                           modify(x = as.numeric(get(x)),
                                   operations = .l$oper)]
                     setnames(dt,
                              x,
@@ -105,7 +105,7 @@ procExpand <- function(
                 dt <- copy(data[,.SD,.SDcols = c(keep)])
                 for (x in .l$vars){
                     dt[,paste0(x) :=
-                           modify(x = get(x),
+                           modify(x = as.numeric(get(x)),
                                   operations = .l$oper),
                        by = by]
                     
