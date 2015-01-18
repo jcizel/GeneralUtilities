@@ -7,7 +7,7 @@ modify <- function(x,
     
     ## q <- parse(text = paste(c("x",operations), collapse = "%>>%"))
     q <- parse(text = paste(c(substitute(x),operations), collapse = "%>>%"))
-    return(eval(q, envir = parent.frame()))
+    return(as.numeric(eval(q, envir = parent.frame())))
 }
 
 
