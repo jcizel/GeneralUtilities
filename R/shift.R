@@ -35,7 +35,7 @@ shift<-function(x,
     
     if (dif == TRUE){
         if (relative ==TRUE){
-            out <- (x - out)/out
+            out <- (x - out)/abs(out)
         } else {
             out <- x - out            
         }
