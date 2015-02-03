@@ -1,3 +1,0 @@
-listAllFun <- function(pkg = 'data.table'){
-    ls(getNamespace(pkg), all.names=TRUE)
-}

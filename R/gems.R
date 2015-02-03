@@ -1,11 +1,10 @@
 modify <- function(x,
                    operations =
-                       c('shift(lag = -1, dif = TRUE)',
+                       c('shift(lag = -1)',
                          '(function(a,b) a^{1/b})(2)',
                          '+1')){
     if (!is.vector(x)) stop('`x` must be a vector!')
     
-    ## q <- parse(text = paste(c("x",operations), collapse = "%>>%"))
     q <- parse(text = paste(c(substitute(x),operations), collapse = "%>>%"))
     return(as.numeric(eval(q, envir = parent.frame())))
 }
